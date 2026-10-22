@@ -1,0 +1,21 @@
+name: backlog-ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  backlog:
+    runs-on: ubuntu-latest
+    env:
+      BACKLOG_ROOT: docs/backlog
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate ticket files (sections, labels, dependencies, cycles)
+        run: python tools/backlog/backlog.py validate
+      - name: Backlog tool unit tests
+        run: python -m unittest discover -s tools/backlog/tests

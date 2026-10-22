@@ -1,0 +1,21 @@
+name: pr-lint
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+permissions:
+  contents: read
+jobs:
+  check-pr-body:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check PR body linkage, evidence and merge-danger sections
+        env:
+          # Passed through the environment, never interpolated into the shell command (avoids script injection).
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body.md"
+          python tools/backlog/backlog.py check-pr --body-file "$RUNNER_TEMP/pr-body.md"

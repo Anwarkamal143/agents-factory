@@ -1,0 +1,74 @@
+%% Current architecture of super-board v3.1.2 (reconstructed from static inspection)
+flowchart TD
+  subgraph ENTRY["Entry points (SKILL.md verb routing — no commands/ dir)"]
+    U[Human types /super-board verb<br/>skills/super-board/SKILL.md]
+    COL[/super-collect/<br/>skills/super-collect]
+    OTH[/ui-refine-loop · visual · git-sync/]
+  end
+  subgraph ORCH["Orchestrator = interactive LLM session (prose contract)"]
+    RW[references/run-workflow.md<br/>wave loop steps 1-8]
+    RUN[references/run.md<br/>lane lifecycles 816 lines]
+  end
+  subgraph DET["Deterministic helpers (.claude/bin)"]
+    WP[wave-plan.sh<br/>jq planner]
+    DEPS[deps.sh<br/>## Blocked by graph]
+    SR[skills-ready.py<br/>REGISTRY dict]
+    VR[verification-ready.py]
+    GR[github-read.py<br/>3 attempts, halt file, exit 79]
+    CARD[card.sh<br/>cached GraphQL moves]
+    PRE[preflight.sh]
+    PRB[pr-body.sh]
+    GG[gh-guard.sh]
+    THR[throttle.sh / usage.sh]
+    STOP[stop.sh]
+  end
+  subgraph WF["Host Workflow runtime (Claude Code dynamic workflows)"]
+    WAVE[workflows/super-board-wave.js<br/>agent() pipeline() log() args]
+  end
+  subgraph CODEX["Codex path (separate implementation)"]
+    CW[codex-wave.sh] --> CL[codex-lane.sh<br/>codex exec --output-schema]
+  end
+  subgraph LEGACY["Legacy backend (opt-in)"]
+    SRUN[super-board-run.sh<br/>nohup claude -p]
+  end
+  subgraph LANES["Lane agents (prompt roles, no agent files)"]
+    PF[pre-flight agent] --> CLS[classify router] --> B[super-build] --> Q[super-qa] --> R[super-review]
+  end
+  subgraph GATE["Enforcement"]
+    MG[merge-gate.sh<br/>mkdir lock · head pin · verify · migrate · merge]
+    MP[merge-policy.py]
+    AP[approval.py<br/>head+scope pinned]
+  end
+  subgraph HOOKS["Claude Code hooks (fail-open)"]
+    H1[guard-secrets]:::h
+    H2[guard-key-literals]:::h
+    H3[guard-delete-outside]:::h
+    H4[guard-worktree-path]:::h
+    H5[guard-protected-push]:::h
+    H6[cleanup-wt]:::h
+  end
+  subgraph STATE["State (no single store)"]
+    GH[(GitHub Project board +<br/>issues/PRs/comments)]
+    LOC[.claude/super-board/<br/>active, configs, inflight, github-halt.json]
+    MAN[docs/super-board/runs/*.md]
+  end
+  U --> RW --> WP
+  WP --> DEPS
+  RW --> SR --> VR
+  RW -->|launch| WAVE
+  RW -->|--codex or no Workflow tool| CW
+  RW -.->|worker_backend=claude-p| SRUN
+  WAVE --> PF
+  CL --> LANES
+  SRUN --> LANES
+  LANES -->|follow| RUN
+  LANES --> CARD & GR & PRB & GG
+  R --> MG
+  MG --> MP & AP
+  MG --> GH
+  CARD & GR --> GH
+  RW --> LOC & MAN
+  COL -->|files Backlog cards| GH
+  HOOKS -.->|PreToolUse on Bash/Read/Edit| LANES
+  MG --> H6
+  classDef h fill:#fff3cd,stroke:#b58900

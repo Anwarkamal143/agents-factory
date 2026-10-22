@@ -1,0 +1,39 @@
+%% Proposed architecture (RECOMMENDATION, not existing implementation)
+flowchart TD
+  subgraph CORE["Factory core (portable, typed code, no vendor imports)"]
+    ENG[Workflow engine<br/>state machine + scheduler]
+    POL[Policy engine<br/>autonomy · approvals · permissions]
+    REG[Component loader + validator<br/>manifests · compat checks]
+    LOG[Event log JSONL + artifact store]
+    VER[Verification runner<br/>executes checks itself]
+  end
+  subgraph CONTRACTS["contracts/ (JSON Schema)"]
+    C1[task-input] & C2[task-result] & C3[approval-request] & C4[verification-result] & C5[run-state] & C6[manifest]
+  end
+  subgraph ASSETS["Portable assets"]
+    SK[skills/*.md + manifest]
+    WFD[workflows/*.yaml]
+    AG[agent role specs]
+  end
+  subgraph ADAPT["adapters/ (harness-specific)"]
+    A1[claude-code] & A2[codex] & A3[pi] & A4[generic-cli]
+    CAP[capabilities.json per adapter]
+  end
+  subgraph PROJ["Project adapter (.factory/)"]
+    PC[project.yaml: commands, base branch, policy overrides]
+  end
+  subgraph INTEG["Optional integrations"]
+    GHI[GitHub issues/PR/CI]:::o
+    TRK[other trackers]:::o
+  end
+  HUMAN([Human]) -->|factory CLI| ENG
+  ENG --> POL & REG & LOG & VER
+  ENG -->|bounded task + context| ADAPT
+  ADAPT -->|structured result| ENG
+  ADAPT -.->|reads| CAP
+  REG --> ASSETS
+  ENG --> CONTRACTS
+  ENG --> PROJ
+  ENG --> INTEG
+  POL -->|enforced at tool/process boundary| ADAPT
+  classDef o stroke-dasharray:4 3

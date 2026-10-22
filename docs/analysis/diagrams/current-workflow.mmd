@@ -1,0 +1,32 @@
+%% Current end-to-end workflow (default backend: workflow). Dashed = prose-only (LLM-followed), solid = code-enforced
+flowchart TD
+  A([Human adds card to Backlog / super-collect files verified card]) --> B{Human moves card Backlog→Ready}
+  B --> C[Orchestrator preconditions:<br/>verify_commands ready · gh auth · clean tree · node --check · wave lock]
+  C --> D[Rate + usage guards]
+  D --> E[wave-plan.sh: cards · sweep · resume · refreshApproval · flag · stranded]
+  E --> F[Act on sweep/resume/stranded]
+  F --> G[skills-ready.py exit 10 halts]
+  G --> H[Claim: add assignee then verify list == [bot]]
+  H --> I[Launch super-board-wave.js]
+  I --> J[Pre-flight agent per 5 cards: done? in progress? overlap? unclear? too big?]
+  J -->|hold/sequence| BL[Blocked + 🙋/❓/⏳ template]
+  J -->|proceed| K[Classify haiku router: kind + complexity]
+  K --> L[Build lane: worktree, branch, draft PR]
+  L -->|advanced| M[QA lane: test plan, test-gap, evidence, screenshots]
+  M -->|fail| L
+  M -->|advanced| N[Review lane: own hypotheses, prior-report memory, test rerun, truth-check]
+  N -->|finding| L
+  N -->|test finding| M
+  N -->|clean| O[merge-gate.sh --expect-head]
+  O -->|exit 0 merged| P[Verify merge sha ancestor of base · close issue · Done]
+  O -->|exit 2/5| RB[loop:rebase → Ready]
+  O -->|exit 7/8| HG[Blocked 🙋 needs approval request]
+  O -->|exit 6| N
+  O -->|exit 4| N
+  O -->|exit 79/9| HALT([Run halted; state preserved])
+  HG -->|trusted human 'done' on pinned request| N
+  P --> Q[Reconcile: release assignees · manifest row · throttle step-down]
+  Q --> R{Halt gates?<br/>3 zero-progress waves · block-rate · user stop}
+  R -.->|prose only in workflow backend| E
+  R --> Z([Board drained / halted / resume])
+  BL -.->|blocked-by closes → sweep| E

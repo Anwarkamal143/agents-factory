@@ -1,0 +1,14 @@
+# agent scratch (review findings, PR bodies, comment drafts)
+.scratch/
+# factory runtime state (generated)
+.factory/state/
+# created by backlog.py create
+.backlog-map.json
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyright/

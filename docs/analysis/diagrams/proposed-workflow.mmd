@@ -1,0 +1,21 @@
+%% Proposed end-to-end workflow (RECOMMENDATION). ⛔ = approval gate (policy-configurable)
+stateDiagram-v2
+  [*] --> Intake
+  Intake --> Spec: request recorded
+  Spec --> SpecApproval: draft spec + acceptance criteria
+  SpecApproval --> Plan: ⛔ approved (or auto at L3+)
+  SpecApproval --> Spec: changes requested
+  Plan --> PlanApproval: tasks + dependency DAG + file ownership
+  PlanApproval --> Execute: ⛔ approved (or auto at L2+)
+  Execute --> Verify: task result schema-valid
+  Verify --> Execute: checks failed (retry<N)
+  Verify --> Review: engine-run checks green
+  Review --> Execute: blocking findings
+  Review --> Integrate: no blocking findings
+  Integrate --> DeliveryApproval: isolated branch rebased + re-verified
+  DeliveryApproval --> Deliver: ⛔ approved (merge/PR/deploy per policy)
+  Deliver --> [*]
+  Execute --> Failed: retry budget exhausted
+  Execute --> Canceled: user cancel
+  Failed --> Execute: human resume
+  note right of Execute: parallel tasks only if disjoint write sets
